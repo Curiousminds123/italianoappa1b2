@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
+  <title id="title">Mappa illustrata di una città italiana</title>
+  <desc id="desc">Una mappa colorata con un percorso a piedi dalla stazione alla piazza, al museo e alla farmacia.</desc>
+  <rect width="960" height="560" rx="30" fill="#edf5ee"/>
+  <path d="M0 105h960M0 270h960M0 445h960M150 0v560M390 0v560M650 0v560M830 0v560" fill="none" stroke="#fff" stroke-width="38"/>
+  <path d="M0 105h960M0 270h960M0 445h960M150 0v560M390 0v560M650 0v560M830 0v560" fill="none" stroke="#d6ded7" stroke-width="3"/>
+  <path d="M103 184C180 184 224 184 270 184s83 2 111 2c13 0 9 39 9 84v48c0 30 45 28 87 28h108c42 0 48-34 48-72v-9c0-28 29-44 69-44h93" fill="none" stroke="#198754" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 20"/>
+  <g transform="translate(236 62)">
+    <rect width="204" height="77" rx="14" fill="#fff" stroke="#b9d0c0" stroke-width="3"/>
+    <path d="M19 52h38V31H19zm7-21v-8h9v8m-6 21V39h10v13M12 52h52" fill="none" stroke="#176344" stroke-width="4" stroke-linejoin="round"/>
+    <text x="77" y="48" fill="#244d38" font-family="Arial,sans-serif" font-size="20" font-weight="700">STAZIONE</text>
+  </g>
+  <g transform="translate(288 324)">
+    <circle cx="48" cy="42" r="39" fill="#fff7dc" stroke="#e6c452" stroke-width="4"/>
+    <path d="M48 20v44M26 42h44" stroke="#d59622" stroke-width="5" stroke-linecap="round"/>
+    <rect x="94" y="11" width="142" height="61" rx="12" fill="#fff" stroke="#e6c452" stroke-width="3"/>
+    <text x="111" y="49" fill="#705515" font-family="Arial,sans-serif" font-size="20" font-weight="700">PIAZZA</text>
+  </g>
+  <g transform="translate(524 362)">
+    <path d="M15 58V26L52 5l37 21v32z" fill="#e8efff" stroke="#5376ad" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M28 58V34h18v24m9-23h16v13H55z" fill="none" stroke="#5376ad" stroke-width="4"/>
+    <rect x="105" y="11" width="121" height="61" rx="12" fill="#fff" stroke="#a8b9dc" stroke-width="3"/>
+    <text x="121" y="49" fill="#354f7b" font-family="Arial,sans-serif" font-size="19" font-weight="700">MUSEO</text>
+  </g>
+  <g transform="translate(701 128)">
+    <rect x="8" y="11" width="72" height="64" rx="10" fill="#ffe4e5" stroke="#cb6165" stroke-width="4"/>
+    <path d="M44 24v38M25 43h38" stroke="#c43d48" stroke-width="8" stroke-linecap="round"/>
+    <rect x="96" y="12" width="154" height="61" rx="12" fill="#fff" stroke="#e3b6b7" stroke-width="3"/>
+    <text x="112" y="50" fill="#90353d" font-family="Arial,sans-serif" font-size="19" font-weight="700">FARMACIA</text>
+  </g>
+  <g>
+    <circle cx="104" cy="184" r="20" fill="#176344" stroke="#fff" stroke-width="6"/>
+    <circle cx="387" cy="270" r="20" fill="#d99d26" stroke="#fff" stroke-width="6"/>
+    <circle cx="630" cy="265" r="20" fill="#5376ad" stroke="#fff" stroke-width="6"/>
+    <circle cx="851" cy="221" r="20" fill="#c43d48" stroke="#fff" stroke-width="6"/>
+  </g>
+  <rect x="28" y="28" width="168" height="46" rx="23" fill="#176344"/>
+  <text x="50" y="58" fill="#fff" font-family="Arial,sans-serif" font-size="19" font-weight="700">A PIEDI · 12 MIN</text>
+</svg>

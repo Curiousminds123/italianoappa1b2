@@ -143,6 +143,9 @@ input.fill:focus{outline:none;border-color:var(--b)}
 
 /* tarjetas de vocabulario */
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:14px 0}
+.vocab-set{margin:22px 0}
+.vocab-set h2{display:flex;align-items:center;gap:9px;font-size:19px}
+.vocab-set h2 span{display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 8px;border-radius:15px;background:#e9f7ef;color:#176344;font-size:14px}
 .vcard{perspective:800px;height:150px;cursor:pointer;border:0;background:none;padding:0}
 .vin{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
 .vcard.flip .vin{transform:rotateY(180deg)}
@@ -154,6 +157,9 @@ input.fill:focus{outline:none;border-color:var(--b)}
 /* lectura y speaking */
 .reading{font-size:19px;line-height:1.85}
 .reading u{cursor:pointer}
+.reading-illustration{margin:12px 0 18px;padding:12px;border:2px solid var(--l);border-radius:16px;background:#f8fbff;text-align:center}
+.reading-illustration img{display:block;width:min(100%,680px);height:auto;margin:0 auto;border-radius:10px}
+.reading-illustration figcaption{margin-top:8px;color:var(--m);font-size:14px;font-weight:800}
 .flash{min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:22px;font-weight:800;padding:24px;border:2px solid var(--l);border-bottom-width:6px;border-radius:20px;cursor:pointer;background:#f7fcff}
 .heard{margin-top:12px;padding:12px 14px;border-radius:14px;background:#f3ecff;color:#6b3fa0;font-weight:700}
 .mic.rec{background:var(--r);border-bottom-color:var(--rd);animation:pulse 1s infinite}
@@ -212,6 +218,11 @@ input.fill:focus{outline:none;border-color:var(--b)}
 .sr-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .conjugation-guide summary{cursor:pointer;font-size:18px;font-weight:900;color:#176344}
 .conjugation-guide[open] summary{margin-bottom:14px}
+.tense-overview{min-width:980px;font-size:14px}
+.tense-overview th:first-child{min-width:145px}
+.tense-overview td[lang="it"]{font-weight:900;white-space:nowrap}
+.verb-ending{display:inline-block;padding:0 2px;border-radius:4px;background:#f1e4ff;color:#7b2cbf;font-weight:900;text-decoration:underline;text-decoration-color:#c89cec;text-decoration-thickness:2px;text-underline-offset:3px}
+.gender-note{color:var(--m);font-size:.85em}
 .conjugation-comparison h2{margin:4px 0}
 .conjugation-comparison>p{line-height:1.55}
 .conjugation-comparison details{border:2px solid var(--l);border-radius:14px;padding:12px 14px;margin:12px 0;background:#fff}
@@ -226,8 +237,9 @@ input.fill:focus{outline:none;border-color:var(--b)}
 .comparison-table th small{display:block;margin-top:3px;color:var(--m);font-weight:700}
 .comparison-table tbody th{background:#f7f7f7}
 .comparison-table tbody tr:nth-child(even){background:#fafafa}
-.comparison-table td.reg{color:#1672aa;background:#f2f9ff;font-weight:900}
-.comparison-table td.irr{color:#c33;background:#fff5f5;font-weight:900}
+.comparison-table td.reg{color:#1672aa;background:#f2f9ff;font-weight:900;white-space:nowrap}
+.comparison-table td.irr{color:#c33;background:#fff5f5;font-weight:900;white-space:nowrap}
+.comparison-table .verb-ending{vertical-align:baseline}
 .irregular-chips{display:flex;flex-wrap:wrap;gap:8px}
 .verb-chip{border:2px solid var(--l);border-radius:14px;background:#fff;padding:8px 12px;font:900 16px Nunito,system-ui,sans-serif;color:var(--t);cursor:pointer}
 .verb-chip:hover{border-color:#9dbbe7;background:#f7faff}

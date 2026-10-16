@@ -14,9 +14,10 @@ Curso interactivo de italiano para hispanohablantes. Incluye **52 módulos**: 31
 ### En cada módulo
 
 - **Teoría visual** con tablas comparativas de uso, forma, ejemplos italianos y traducción al español.
-- **Vocabulario amplio**: cada bloque incluye 12 palabras y expresiones con significado, tarjetas con audio y ejercicios de repaso.
-- **Conjugador** con tablas de 12 tiempos, modelos regulares de -are/-ere/-ire, verbos irregulares frecuentes y práctica autocorregible. Las tablas comparativas ponen las personas en filas y los verbos en columnas; azul identifica los modelos regulares y rojo los irregulares.
-- **Ejercicios**, lecturas y conversación para practicar comprensión, escritura y expresión oral.
+- **Vocabulario ampliado y específico**: cada bloque temático contiene 24 tarjetas, con 12 expresiones nuevas relacionadas únicamente con ese tema. Los módulos gramaticales también duplican sus tarjetas con vocabulario elegido para la regla de cada módulo.
+- **Conjugador** con tablas de 15 tiempos, ejemplos paralelos de -are/-ere/-ire y del verbo irregular essere, terminaciones resaltadas y práctica autocorregible. Las tablas comparativas ponen las personas en filas y los verbos en columnas; azul identifica los modelos regulares, rojo los irregulares y morado las terminaciones.
+- **Lecturas ampliadas en italiano** con cinco preguntas de comprensión en todos los módulos, además de ejercicios y conversación para practicar comprensión, escritura y expresión oral.
+- **Ilustración original** de un recorrido por la ciudad, integrada en el módulo de vocabulario de ciudad y transporte.
 - **Progreso**, XP, racha diaria y exámenes de nivel.
 - **Audio** configurado para italiano (`it-IT`), con selección automática de una voz italiana instalada si está disponible.
 
@@ -39,7 +40,7 @@ italianoappa1b2/
 │   ├── levels.js
 │   ├── italiano.js
 │   └── conjugator-italiano.js
-├── assets/img/
+├── assets/img/ (incluye un mapa ilustrado de ciudad)
 └── .nojekyll
 ```
 

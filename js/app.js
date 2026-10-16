@@ -264,9 +264,52 @@
   const FUTURE_ENDINGS = ["ò","ai","à","emo","ete","anno"];
   const CONDITIONAL_ENDINGS = ["ei","esti","ebbe","emmo","este","ebbero"];
   const REMOTE_ENDINGS = { are: ["ai","asti","ò","ammo","aste","arono"], ere: ["ei","esti","é","emmo","este","erono"], ire: ["ii","isti","ì","immo","iste","irono"] };
-  const AUXILIARY_MODES = { present: "present", imperfect: "imperfect", future: "future", conditional: "conditional", subjunctive: "subjunctive" };
+  const AUXILIARY_MODES = { present: "present", imperfect: "imperfect", future: "future", conditional: "conditional", subjunctive: "subjunctive", subjunctiveImperfect: "subjunctiveImperfect", remote: "remote" };
+  const PRESENT_ENDINGS = { are: ["o","i","a","iamo","ate","ano"], ere: ["o","i","e","iamo","ete","ono"], ire: ["o","i","e","iamo","ite","ono"] };
+  const SUBJUNCTIVE_ENDINGS = { are: ["i","i","i","iamo","iate","ino"], ere: ["a","a","a","iamo","iate","ano"], ire: ["a","a","a","iamo","iate","ano"] };
+  const SUBJUNCTIVE_IMPERFECT_ENDINGS = { are: ["assi","assi","asse","assimo","aste","assero"], ere: ["essi","essi","esse","essimo","este","essero"], ire: ["issi","issi","isse","issimo","iste","issero"] };
+  const IRREGULAR_SUBJUNCTIVE_IMPERFECT = {
+    essere: ["fossi","fossi","fosse","fossimo","foste","fossero"],
+    fare: ["facessi","facessi","facesse","facessimo","faceste","facessero"],
+    dire: ["dicessi","dicessi","dicesse","dicessimo","diceste","dicessero"],
+    bere: ["bevessi","bevessi","bevesse","bevessimo","beveste","bevessero"]
+  };
   function verbByInfinitive(infinitive) { return VERBS.find(v => v.infinitive === infinitive); }
   function verbGroup(verb) { return verb.infinitive.slice(-3); }
+  function formEnding(word, mode, group, person) {
+    const candidates = {
+      present: PRESENT_ENDINGS[group],
+      imperfect: IMPERFECT_ENDINGS[group],
+      future: FUTURE_ENDINGS,
+      conditional: CONDITIONAL_ENDINGS,
+      subjunctive: SUBJUNCTIVE_ENDINGS[group],
+      subjunctiveImperfect: SUBJUNCTIVE_IMPERFECT_ENDINGS[group],
+      remote: REMOTE_ENDINGS[group],
+      imperative: group === "are" ? ["a","iamo","ate"] : group === "ere" ? ["i","iamo","ete"] : ["i","iamo","ite"],
+      participle: ["ato","uto","ito","to","so","sto","o","a","i","e"]
+    }[mode] || [];
+    const selected = mode === "future" || mode === "conditional"
+      ? candidates[[0,1,2,3,4,5][person]]
+      : candidates[person];
+    const ending = (selected && word.endsWith(selected) ? selected : [...candidates].sort((a,b) => b.length-a.length).find(item => item && word.endsWith(item))) || word.slice(-1);
+    return [word.slice(0, -ending.length), word.slice(-ending.length)];
+  }
+  function highlightedForm(form, verb, tense, person) {
+    const endingMarkup = (word, mode, group, index) => {
+      const [stem, ending] = formEnding(word, mode, group, index);
+      return `${esc(stem)}<span class="verb-ending">${esc(ending)}</span>`;
+    };
+    if (tense.mode !== "compound") return endingMarkup(form, tense.mode, verbGroup(verb), person);
+    const [auxiliaryForm, participleWithNote = ""] = form.split(" ");
+    const auxiliary = verbByInfinitive(verb.auxiliary);
+    const participle = participleWithNote.replace(/\s*\((?:o\/a|i\/e)\)/g, "");
+    const agreement = participleWithNote.match(/\((?:o\/a|i\/e)\)/)?.[0] || "";
+    return `${endingMarkup(auxiliaryForm, AUXILIARY_MODES[tense.auxiliary], verbGroup(auxiliary), person)} ${endingMarkup(participle, "participle", verbGroup(verb), person)}${agreement ? ` <span class="gender-note">${agreement}</span>` : ""}`;
+  }
+  function highlightedParticiple(participle, verb) {
+    const [stem, ending] = formEnding(participle, "participle", verbGroup(verb), 0);
+    return `${esc(stem)}<span class="verb-ending">${esc(ending)}</span>`;
+  }
   function simpleForms(verb, mode) {
     if (verb[mode]) return verb[mode];
     const group = verbGroup(verb);
@@ -280,6 +323,10 @@
     if (mode === "subjunctive") {
       const endings = group === "are" ? ["i","i","i","iamo","iate","ino"] : ["a","a","a","iamo","iate","ano"];
       return endings.map(end => `${stem}${end}`);
+    }
+    if (mode === "subjunctiveImperfect") {
+      return IRREGULAR_SUBJUNCTIVE_IMPERFECT[verb.infinitive] ||
+        SUBJUNCTIVE_IMPERFECT_ENDINGS[group].map(end => `${stem}${end}`);
     }
     if (mode === "remote") return REMOTE_ENDINGS[group].map(end => `${stem}${end}`);
     return [];
@@ -312,26 +359,51 @@
     const verbOptions = VERBS.filter(item => tense.mode !== "imperative" || item.imperative).map(item => `<option value="${item.infinitive}" ${item.infinitive === verb.infinitive ? "selected" : ""}>${esc(item.infinitive)} · ${esc(item.meaning)}</option>`).join("");
     const tableRows = forms.map((form, i) => {
       const spokenForm = form.replace(/\s*\((?:o\/a|i\/e)\)/g, "");
-      return `<tr><th scope="row">${pronouns[i]}</th><td><b>${esc(form)}</b></td><td><button class="audio-btn" data-say="${esc(`${pronouns[i]} ${spokenForm}`)}" aria-label="Escuchar ${esc(pronouns[i])} ${esc(spokenForm)}">🔊</button></td></tr>`;
+      return `<tr><th scope="row">${pronouns[i]}</th><td><b>${highlightedForm(form, verb, tense, i)}</b></td><td><button class="audio-btn" data-say="${esc(`${pronouns[i]} ${spokenForm}`)}" aria-label="Escuchar ${esc(pronouns[i])} ${esc(spokenForm)}">🔊</button></td></tr>`;
     }).join("");
     const comparisonTable = (verbs, irregular) => {
       const rows = forms.map((_, person) => `<tr><th scope="row">${pronouns[person]}</th>${verbs.map(model => {
         const modelForm = conjugate(model, tense)[person];
-        return `<td class="${irregular ? "irr" : "reg"}">${esc(modelForm || "—")}</td>`;
+        return `<td class="${irregular ? "irr" : "reg"}">${modelForm ? highlightedForm(modelForm, model, tense, person) : "—"}</td>`;
       }).join("")}</tr>`).join("");
       return `<div class="tblw comparison-scroll"><table class="comparison-table"><thead><tr><th scope="col">Persona</th>${verbs.map(model => `<th scope="col"><i>${esc(model.infinitive)}</i><small>${esc(model.meaning)}</small></th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
     };
     const regularVerbs = ["parlare", "credere", "dormire", "finire"].map(verbByInfinitive);
     const irregularVerbs = VERBS.filter(model => model.group === "irregular" && (tense.mode !== "imperative" || model.imperative));
-    const comparison = `<section class="card conjugation-comparison"><span class="kind">LA STESSA PERSONA · PIÙ VERBI</span><h2>Tabla comparativa: ${esc(tense.label)}</h2><p>Compara cada persona en varios modelos, como en una tabla escolar de conjugación. <span class="reg">Azul = modelo regular.</span> <span class="irr">Rojo = verbo irregular.</span></p><details open><summary>🧩 Modelos regulares (-are, -ere, -ire)</summary>${comparisonTable(regularVerbs, false)}</details><details><summary>⭐ Verbos irregulares frecuentes</summary>${comparisonTable(irregularVerbs, true)}</details></section>`;
+    const comparison = `<section class="card conjugation-comparison"><span class="kind">LA STESSA PERSONA · PIÙ VERBI</span><h2>Tabla comparativa: ${esc(tense.label)}</h2><p>Compara cada persona en varios modelos. <span class="reg">Azul = modelo regular.</span> <span class="irr">Rojo = verbo irregular.</span> <span class="verb-ending">Morado = terminación.</span></p><details open><summary>🧩 Modelos regulares (-are, -ere, -ire)</summary>${comparisonTable(regularVerbs, false)}</details><details><summary>⭐ Verbos irregulares frecuentes</summary>${comparisonTable(irregularVerbs, true)}</details></section>`;
+    const guideDescriptions = {
+      presente: "Presente, hábitos y verdades generales.",
+      "passato-prossimo": "Acción pasada terminada.",
+      imperfetto: "Hábitos, descripciones y contexto en pasado.",
+      "trapassato-prossimo": "Acción anterior a otra acción pasada.",
+      "futuro-semplice": "Predicción, promesa o futuro.",
+      "futuro-anteriore": "Acción terminada antes de un momento futuro.",
+      "condizionale-presente": "Hipótesis y cortesía.",
+      "condizionale-passato": "Hipótesis pasada y arrepentimiento.",
+      "congiuntivo-presente": "Deseo, duda, necesidad o emoción.",
+      "congiuntivo-passato": "Emoción o duda sobre una acción pasada.",
+      "congiuntivo-imperfetto": "Deseo, duda e hipótesis referidos al pasado.",
+      "congiuntivo-trapassato": "Acción hipotética o deseada anterior a otra pasada.",
+      "trapassato-remoto": "Acción pasada inmediatamente anterior a otra narrada en passato remoto.",
+      imperativo: "Órdenes, consejos e invitaciones.",
+      "passato-remoto": "Tiempo narrativo e histórico (C1)."
+    };
+    const overviewVerbs = ["parlare", "credere", "dormire"].map(verbByInfinitive);
+    const overviewIrregular = verbByInfinitive("essere");
+    const tenseOverview = TENSES.map(item => {
+      const examplePerson = 0;
+      const examples = overviewVerbs.map(model => highlightedForm(conjugate(model, item)[examplePerson], model, item, examplePerson));
+      const irregularExample = highlightedForm(conjugate(overviewIrregular, item)[examplePerson], overviewIrregular, item, examplePerson);
+      return `<tr><th scope="row">${esc(item.label)}</th><td>${tenseFormation(item)}</td><td lang="it">${examples[0]}</td><td lang="it">${examples[1]}</td><td lang="it">${examples[2]}</td><td lang="it">${irregularExample}</td><td>${guideDescriptions[item.id]}</td></tr>`;
+    }).join("");
     const note = verb.auxiliary === "essere" && tense.mode === "compound"
       ? "Con essere, el participio concuerda con el sujeto. La tabla muestra (o/a) en singular e (i/e) en plural."
       : tense.mode === "compound" ? "Los tiempos compuestos se forman con avere o essere conjugado y el participio pasado. Con essere, el participio concuerda con el sujeto."
         : tense.mode === "remote" ? "Tiempo narrativo, común en relatos históricos y literarios. En el habla cotidiana suele preferirse el passato prossimo."
           : tense.mode === "imperative" ? "El imperativo presenta tres formas: tu, noi y voi; el pronombre sujeto se omite."
             : "";
-    main().innerHTML = `<section class="conj-hero"><div class="conj-orbit" aria-hidden="true">à</div><div><span class="tag">A2 → C1</span><h1>Il laboratorio dei verbi</h1><p>Explora 12 tiempos, compara modelos regulares e irregulares y practica la forma exacta para cada persona. Las tablas incluyen audio en italiano.</p></div></section>
-      <div class="conj-quick"><span>📚 12 tiempos verbales</span><span>🧩 4 modelos regulares</span><span>⚡ 12 irregulares</span><span>🎧 Audio it-IT</span></div>
+    main().innerHTML = `<section class="conj-hero"><div class="conj-orbit" aria-hidden="true">à</div><div><span class="tag">A2 → C1</span><h1>Il laboratorio dei verbi</h1><p>Explora 15 tiempos, compara modelos regulares e irregulares y practica la forma exacta para cada persona. Las tablas incluyen audio en italiano.</p></div></section>
+      <div class="conj-quick"><span>📚 15 tiempos verbales</span><span>🧩 4 modelos regulares</span><span>⚡ 12 irregulares</span><span>🎧 Audio it-IT</span></div>
       <div class="card"><div class="conj-title"><div><span class="kind">CONJUGACIÓN INTERACTIVA</span><h2>Elige el verbo y el tiempo</h2></div><span class="verb-group">${esc(verb.group)}</span></div>
         <div class="conj-selects"><label>Verbo<select id="conjVerb">${verbOptions}</select><small>${esc(verb.meaning)} · auxiliar: <b>${esc(verb.auxiliary)}</b></small></label><label>Tiempo verbal<select id="conjTense">${tenseOptions}</select><small>${esc(tenseDescription(tense.id))}</small></label></div>
         <div class="tblw conj-table"><table><thead><tr><th>Persona</th><th>${esc(tense.label)}</th><th>Audio</th></tr></thead><tbody>${tableRows}</tbody></table></div>
@@ -344,20 +416,9 @@
         <div id="conjFeedback" aria-live="polite"></div><button class="btn sec small" id="nextConj">Otra pregunta →</button>
         <p class="muted">Se acepta la respuesta con o sin acentos. Pulsa «otra pregunta» para cambiar de persona sin cambiar de verbo ni de tiempo.</p>
       </div>
-      <details class="card conjugation-guide"><summary>🧠 Mapa rápido de los tiempos · de A2 a C1</summary><div class="tblw"><table><thead><tr><th>Tiempo</th><th>Cómo se forma</th><th>Uso principal</th></tr></thead><tbody>
-        <tr><td>Presente</td><td>Raíz + terminaciones -o, -i, -a/-e, -iamo, -ate/-ete/-ite, -ano/-ono</td><td>Presente, hábitos y verdades generales.</td></tr>
-        <tr><td>Passato prossimo</td><td>avere / essere en presente + participio pasado</td><td>Acción pasada terminada.</td></tr>
-        <tr><td>Imperfetto</td><td>Raíz + -avo/-evo/-ivo y sus terminaciones</td><td>Hábitos, descripciones y contexto en pasado.</td></tr>
-        <tr><td>Trapassato prossimo</td><td>avere / essere en imperfetto + participio</td><td>Acción anterior a otra acción pasada.</td></tr>
-        <tr><td>Futuro semplice</td><td>Raíz de futuro + -ò, -ai, -à, -emo, -ete, -anno</td><td>Predicción, promesa o futuro.</td></tr>
-        <tr><td>Futuro anteriore</td><td>avere / essere en futuro + participio</td><td>Acción terminada antes de otra futura.</td></tr>
-        <tr><td>Condizionale presente / passato</td><td>Raíz de futuro + -ei… / auxiliar en condicional + participio</td><td>Hipótesis, cortesía y arrepentimiento.</td></tr>
-        <tr><td>Congiuntivo presente / passato</td><td>Forma del subjuntivo / avere o essere en subjuntivo + participio</td><td>Deseo, necesidad, duda, emoción y valoración.</td></tr>
-        <tr><td>Imperativo</td><td>Formas tu, noi, voi sin pronombre</td><td>Instrucciones, consejos e invitaciones.</td></tr>
-        <tr><td>Passato remoto</td><td>Formas simples irregulares y regulares</td><td>Relato escrito e histórico (C1).</td></tr>
-      </tbody></table></div></details>
+      <details class="card conjugation-guide"><summary>🧠 Los 15 tiempos verbales: formación y ejemplos por conjugación</summary><p>La tabla compara un ejemplo de las conjugaciones regulares -are, -ere e -ire y del irregular essere. Las terminaciones aparecen en morado.</p><div class="tblw"><table class="tense-overview"><thead><tr><th>Tiempo</th><th>Formación</th><th>-are · parlare</th><th>-ere · credere</th><th>-ire · dormire</th><th>Irregular · essere</th><th>Uso principal</th></tr></thead><tbody>${tenseOverview}</tbody></table></div></details>
       <details class="card conjugation-guide"><summary>🧩 Modelos de conjugación regular</summary><div class="tblw"><table><thead><tr><th>Grupo</th><th>Infinitivo</th><th>Presente · io / noi / loro</th><th>Imperfetto · io</th><th>Participio pasado</th></tr></thead><tbody>
-        ${["parlare", "credere", "dormire", "finire"].map(inf => { const model = verbByInfinitive(inf); return `<tr><td>${esc(model.group)}</td><td><b>${inf}</b></td><td>${model.present[0]} / ${model.present[3]} / ${model.present[5]}</td><td>${model.infinitive.slice(0, -3)}${model.infinitive.endsWith("are") ? "avo" : model.infinitive.endsWith("ere") ? "evo" : "ivo"}</td><td>${model.participle}</td>`; }).join("")}
+        ${["parlare", "credere", "dormire", "finire"].map(inf => { const model = verbByInfinitive(inf); const present = TENSES.find(item => item.id === "presente"); const imperfect = simpleForms(model, "imperfect")[0]; return `<tr><td>${esc(model.group)}</td><td><b>${inf}</b></td><td>${[0,3,5].map(person => highlightedForm(model.present[person], model, present, person)).join(" / ")}</td><td>${highlightedForm(imperfect, model, { mode: "imperfect" }, 0)}</td><td>${highlightedParticiple(model.participle, model)}</td>`; }).join("")}
       </tbody></table></div><p class="muted">Los verbos se agrupan en -are, -ere y -ire. Algunos verbos en -ire añaden -isc- en ciertas personas del presente, como finire.</p></details>
       <details class="card conjugation-guide"><summary>⭐ Verbos irregulares imprescindibles</summary><div class="irregular-chips">${VERBS.filter(item => item.group === "irregular").map(item => `<button class="verb-chip" data-verb="${esc(item.infinitive)}">${esc(item.infinitive)}<small>${esc(item.meaning)}</small></button>`).join("")}</div><p class="muted">Selecciona un verbo para consultar sus formas en cada tiempo.</p></details>`;
     $("#conjVerb").onchange = event => { conjugationSelection.verb = event.target.value; conjugationQuiz = null; conjugator(); };
@@ -368,13 +429,36 @@
     $("#conjAnswer").onkeydown = event => { if (event.key === "Enter") checkConjugation(); };
     $("#nextConj").onclick = () => { newConjugationQuestion(forms, pronouns); conjugator(); $("#conjAnswer").focus(); };
   }
+  function tenseFormation(tense) {
+    const endings = text => text.replace(/(-[a-zà-ù]+)/giu, '<span class="verb-ending">$1</span>');
+    const formations = {
+      presente: `Raíz + ${endings("-o, -i, -a/-e, -iamo, -ate/-ete/-ite, -ano/-ono")}`,
+      "passato-prossimo": "avere / essere en presente + participio pasado",
+      imperfetto: `Raíz + ${endings("-avo/-evo/-ivo, -avi/-evi/-ivi, -ava/-eva/-iva…")}`,
+      "trapassato-prossimo": "avere / essere en imperfetto + participio pasado",
+      "trapassato-remoto": "avere / essere en passato remoto + participio pasado",
+      "futuro-semplice": `Raíz de futuro + ${endings("-ò, -ai, -à, -emo, -ete, -anno")}`,
+      "futuro-anteriore": "avere / essere en futuro + participio pasado",
+      "condizionale-presente": `Raíz de futuro + ${endings("-ei, -esti, -ebbe, -emmo, -este, -ebbero")}`,
+      "condizionale-passato": "avere / essere en condicional + participio pasado",
+      "congiuntivo-presente": `Raíz + ${endings("-i/-a, -iamo, -iate, -ino/-ano")}`,
+      "congiuntivo-passato": "avere / essere en subjuntivo presente + participio pasado",
+      "congiuntivo-imperfetto": `Raíz + ${endings("-assi/-essi/-issi, -assimo/-essimo/-issimo…")}`,
+      "congiuntivo-trapassato": "avere / essere en subjuntivo imperfetto + participio pasado",
+      imperativo: `Formas tu, noi, voi: ${endings("-a/-i, -iamo, -ate/-ete/-ite")}`,
+      "passato-remoto": `Raíz + ${endings("-ai/-ei/-ii, -asti/-esti/-isti, -ò/-é/-ì…")}`
+    };
+    return formations[tense.id] || "";
+  }
   function tenseDescription(id) {
     const descriptions = {
       presente: "presente, hábitos y verdades generales", "passato-prossimo": "acción terminada en el pasado",
       imperfetto: "hábitos y descripciones pasadas", "trapassato-prossimo": "acción anterior a otra pasada",
+      "passato-remoto": "tiempo narrativo e histórico, para C1", "trapassato-remoto": "acción anterior a otra narrada en passato remoto",
       "futuro-semplice": "predicción, promesa o futuro", "futuro-anteriore": "acción terminada antes de un momento futuro",
       "condizionale-presente": "hipótesis y cortesía", "condizionale-passato": "hipótesis pasada y arrepentimiento",
       "congiuntivo-presente": "deseo, duda, necesidad o emoción", "congiuntivo-passato": "emoción o duda sobre una acción pasada",
+      "congiuntivo-imperfetto": "deseo, duda e hipótesis referidos al pasado", "congiuntivo-trapassato": "acción hipotética anterior a otra pasada",
       imperativo: "órdenes, consejos e invitaciones", "passato-remoto": "tiempo narrativo e histórico, para C1"
     };
     return descriptions[id] || "";
@@ -400,7 +484,7 @@
     if ($("#conjFeedback .fb.ok")) return;
     const verb = verbByInfinitive($("#conjVerb").value);
     const tense = TENSES.find(item => item.id === $("#conjTense").value);
-    const pronouns = tense && tense.mode === "imperative" ? ["(tu)", "(nous)", "(vous)"] : PRONOUNS;
+    const pronouns = tense && tense.mode === "imperative" ? ["(tu)", "(noi)", "(voi)"] : PRONOUNS;
     const person = pronouns.indexOf($(".quiz-prompt strong").textContent.split(" + ")[0]);
     const answer = verb && tense && person >= 0 ? conjugate(verb, tense)[person] : null;
     if (typeof answer !== "string") { toast("No se pudo generar la respuesta. Cambia de tiempo o de verbo e inténtalo de nuevo."); return; }
@@ -449,10 +533,13 @@
 
   function vocabulario(m) {
     rec(m.id).voc = 1; save();
+    const baseCount = m.vocBaseCount || m.voc.length;
+    const renderCards = (from, to) => m.voc.slice(from, to).map((v, i) => `<button class="vcard" data-i="${from + i}" aria-label="${esc(v[1])}"><div class="vin"><div class="vf"><span class="e">${v[0]}</span><span class="w">${esc(v[1])}</span></div><div class="vb"><span class="e" style="font-size:30px">${v[0]}</span>${esc(v[2])}</div></div></button>`).join("");
     main().innerHTML = modHead(m, "vocabulario") +
-      `<p class="muted">Toca una tarjeta para escuchar la expresión en italiano y ver su significado.</p>
+      `<p class="muted">Toca una tarjeta para escuchar la expresión en italiano y ver su significado. Cada módulo incluye vocabulario del tema y una ampliación del nivel.</p>
       <div class="row"><button class="btn sec small" id="allv">🔊 Escuchar todas</button><button class="btn sec small" id="flipall">🔄 Girar todas</button></div>
-      <div class="vgrid">${m.voc.map((v, i) => `<button class="vcard" data-i="${i}" aria-label="${esc(v[1])}"><div class="vin"><div class="vf"><span class="e">${v[0]}</span><span class="w">${esc(v[1])}</span></div><div class="vb"><span class="e" style="font-size:30px">${v[0]}</span>${esc(v[2])}</div></div></button>`).join("")}</div>
+      <section class="vocab-set"><h2>Vocabulario del tema <span>${baseCount}</span></h2><div class="vgrid">${renderCards(0, baseCount)}</div></section>
+      <section class="vocab-set"><h2>Ampliación del nivel <span>${m.voc.length - baseCount}</span></h2><div class="vgrid">${renderCards(baseCount, m.voc.length)}</div></section>
       <div class="row">${next(m, "vocabulario")}</div>`;
     bind();
     $$(".vcard").forEach(c => c.onclick = () => { c.classList.toggle("flip"); say(m.voc[c.dataset.i][1]); });
@@ -604,7 +691,7 @@
   function lectura(m) {
     const answered = new Set();
     main().innerHTML = modHead(m, "lectura") +
-      `<h2>📖 ${esc(m.tx.ti)}</h2><div class="card reading" id="rd">${m.tx.b}</div>
+      `<h2>📖 ${esc(m.tx.ti)}</h2>${m.readingImage ? `<figure class="reading-illustration"><img src="${esc(m.readingImage.src)}" alt="${esc(m.readingImage.alt)}"><figcaption>Mapa ilustrado para practicar las indicaciones y los lugares de la ciudad.</figcaption></figure>` : ""}<div class="card reading" id="rd">${m.tx.b}</div>
       <div class="row"><button class="btn sec" id="lis">🔊 Escuchar</button><button class="btn sec" id="stop">⏹️ Parar</button>
       <label class="muted"><input type="checkbox" id="slow" ${S.slow ? "checked" : ""}> Audio lento</label></div>
       <p class="muted">Toca las palabras <u>subrayadas</u> para oírlas.</p>
